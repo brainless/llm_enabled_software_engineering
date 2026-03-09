@@ -3,6 +3,8 @@ import HelloWorld from './HelloWorld';
 import StateOfAgents from './StateOfAgents';
 import AgenticEngineering from './AgenticEngineering';
 import VerifiableLoop from './VerifiableLoop';
+import CliFirst from './CliFIrst';
+import LlmStructuredParser from './LlmStructuredParser';
 
 export interface Slide {
   id: number;
@@ -15,4 +17,6 @@ export const slides: Slide[] = [
   { id: 2, title: 'State of Coding with Agents', component: StateOfAgents },
   { id: 3, title: 'Agentic Engineering, not Vibe Coding', component: AgenticEngineering },
   { id: 4, title: 'Every Step Is Verifiable', component: VerifiableLoop },
+  { id: 5, title: 'CLI-First: Build the Pipeline Before the API', component: CliFirst },
+  { id: 6, title: 'LLM as a Structured Parser', component: LlmStructuredParser },
 ];

@@ -71,9 +71,50 @@ Sources:
 
 ---
 
+---
+
+### Slide 5 — CLI-First: Build the Pipeline Before the API
+`CliFirst.tsx`
+
+The development methodology from `dwata`. Before any API endpoint exists, build the core data/processing flow as a standalone CLI binary:
+
+```
+cargo run --bin inspect_email_content -- <email_id>
+```
+
+Runs the full pipeline — normalize raw email, LLM classifies (Bill/Transaction), LLM extracts variables, prints DB preview — against real data, in the terminal. No server, no frontend, no mocks.
+
+Two columns:
+- **The binary:** what each step does (normalize → classify → extract → DB preview)
+- **Git history:** the pipeline's evolution across commits — each a verifiable step
+
+Key points: real data from day one, fast iteration loop, API integration is just plumbing once the CLI works, the agent can run this binary too.
+
+Closing line: *"Core logic lives independently of its delivery mechanism — the API is a thin layer on top."*
+
+---
+
+### Slide 6 — LLM as a Structured Parser
+`LlmStructuredParser.tsx`
+
+The type-driven LLM integration pattern from `dwata-agents`. Types with `JsonSchema` derive become the LLM's tool call schema directly — the LLM must return data matching your Rust types or the agent retries with a corrective message.
+
+Three-column layout:
+- **Left (2/3):** Rust type definitions (`LabelDocumentParams`, `TemplateVariableParams`) as code block, with explanation of `JsonSchema` derive
+- **Right (1/3):** Three cards — what **LLM does** (classify, identify, extract), what **Rust does** (parse amounts/dates, validate, map to DB), what **Agent does** (retry on invalid JSON, prompt for missing tool call, surface failures)
+
+Closing line: *"You never wrote a parser for email formats — the LLM is the parser. Your types define what a correct parse looks like."*
+
+Sources:
+- https://github.blog/ai-and-ml/llms/why-ai-is-pushing-developers-toward-typed-languages/
+- https://www.infoworld.com/article/4142019/coding-for-agents.html
+- https://matsen.fhcrc.org/general/2025/10/30/agentic-coding-principles.html
+
+---
+
 ## Ideas for Future Slides
 
-### Slide 5 — Type-Driven Development in Practice
+### Slide 7 — Type-Driven Development in Practice (formerly Slide 5)
 Show the actual workflow in `rustysolid`/`dwata`:
 1. Define a type in `shared-types/src/*.rs` with `serde` + `ts-rs`
 2. Run `generate_api_types` → TypeScript emitted to `gui/src/types/api.ts`
@@ -85,50 +126,69 @@ Key point: the agent can't hallucinate the API shape — the compiler won't let 
 
 ---
 
-### Slide 6 — Context Engineering
+### Slide 7 — Type-Driven Development in Practice
+Show the actual workflow in `rustysolid`/`dwata`:
+1. Define a type in `shared-types/src/*.rs` with `serde` + `ts-rs`
+2. Run `generate_api_types` → TypeScript emitted to `gui/src/types/api.ts`
+3. Implement the backend handler against the Rust type
+4. Implement the frontend UI against the generated TS type
+5. Feature is only "done" when both ends compile against the same contract
+
+Key point: the agent can't hallucinate the API shape — the compiler won't let it. Show a concrete example: a new `FinancialTransaction` field added in Rust → TypeScript regenerated → frontend compile error points exactly to where the UI needs updating.
+
+---
+
+### Slide 8 — Context Engineering
 The deliberate design of what information the agent has access to and when. Covers:
-- `CLAUDE.md` / `AGENTS.md` — project-specific instructions loaded every session
-- How project structure itself is a form of context (where types live, where migrations go, where scripts are)
-- The `rustysolid` template as a pre-engineered context: agent already knows where everything belongs
-- Research finding: single context files don't scale past ~1,000 lines of code — structured, hierarchical context does
+- `CLAUDE.md` / `AGENTS.md` — project-specific instructions loaded every session (tech stack, conventions, where things live)
+- Project structure itself as context: when types always live in `shared-types/`, migrations in `backend/migrations/`, scripts in `scripts/` — the agent already knows where to look
+- `rustysolid` as a pre-engineered context: a new agent session on a fresh clone immediately understands the project
+- Research finding: single flat context files don't scale past ~1,000 lines of code — structured, hierarchical context does
 
 Source: https://arxiv.org/abs/2509.14744
 
 ---
 
-### Slide 7 — Live Demo: Adding a Feature
-Walk through adding a simple feature live during the workshop:
+### Slide 9 — Live Demo Transition
+The slide that hands off from theory to the live coding portion of the workshop.
+
+Walk through adding a simple feature live:
 - Define the Rust type
 - Regenerate TypeScript
 - Prompt the agent to implement both handler and UI
 - Watch pre-commit hooks catch and correct issues
 - Ship
 
-This is the slide to transition from theory to the live coding portion.
+Keep this slide minimal — it's a cue card, not content. One sentence per step.
 
 ---
 
-### Slide 8 — What You Can Step Away From
+### Slide 10 — What You Can Step Away From
 Flip side of the thesis — what you no longer need to babysit when the system is set up:
-- Formatting (automated)
-- Type consistency across frontend/backend (generated)
-- Schema drift (migrations)
-- Build breakage (hooks)
-- Deploy configuration (scripts)
+
+| You delegate | To |
+|---|---|
+| Formatting | `cargo fmt` / `prettier` (automated) |
+| Type consistency frontend/backend | Generated types |
+| Schema drift | Versioned migrations |
+| Build breakage | Pre-commit hooks |
+| Deploy configuration | Scripts from day one |
+| Email parsing logic | LLM + typed tool schema |
 
 What you still own: architecture decisions, type design, business logic review, context engineering.
 
 ---
 
-### Slide 9 — Starting a New Project Right
+### Slide 11 — Starting a New Project Right
 Practical takeaways for the audience:
-- Use a typed language for your backend (`Rust`, `Go`, `TypeScript` with strict mode)
+- Use a strongly typed backend language (`Rust`, `Go`, `TypeScript` strict mode)
 - Generate your frontend types from your backend — never write them twice
-- Set up pre-commit hooks on day one, not when things break
+- Write a `CLAUDE.md` on day one — not when things break
+- Set up pre-commit hooks before you invite the agent in
 - Write deployment scripts before you need them
-- Use `CLAUDE.md` to capture your project's conventions immediately
+- Build core logic as CLI binaries first — integrate to API second
 
-Reference: `rustysolid` as an open template they can use.
+Reference: `rustysolid` as an open template they can clone and start from.
 
 ---
 
