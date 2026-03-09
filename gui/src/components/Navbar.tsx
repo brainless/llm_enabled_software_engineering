@@ -5,10 +5,6 @@ export default function Navbar() {
   const params = useParams();
   const navigate = useNavigate();
 
-  function handlePlay() {
-    navigate('/slides/1');
-  }
-
   function handleNext() {
     const current = parseInt(params.id ?? '1');
     const next = slides.find((s) => s.id === current + 1);
@@ -40,9 +36,6 @@ export default function Navbar() {
       <div class="navbar-end gap-2">
         <button class="btn btn-ghost btn-sm" onClick={handlePrev} disabled={isFirst()}>
           ‹ Prev
-        </button>
-        <button class="btn btn-primary btn-sm" onClick={handlePlay}>
-          ▶ Play
         </button>
         <button class="btn btn-ghost btn-sm" onClick={handleNext} disabled={isLast()}>
           Next ›
